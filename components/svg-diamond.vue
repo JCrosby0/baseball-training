@@ -84,7 +84,7 @@
           :transform="`rotate(45) scale(${baseScale})`"
         ></use>
       </g>
-      <circle id="player" class="player" cx="0" cy="0" r="5"></circle>
+      <!-- <circle id="player" class="player" cx="0" cy="0" r="5"></circle> -->
     </defs>
 
     <title>Baseball Diamond</title>
@@ -169,7 +169,7 @@
         <use href="#pitcher" :x="42.6665" :y="-42.6665" />
 
         <!-- Players -->
-        <g>
+        <!-- <g>
           <g v-for="player in players" :key="player.positionNumber">
             <use
               :id="player.positionName"
@@ -182,11 +182,8 @@
               @mouseup="endDrag($event, player)"
               @mouseleave="endDrag($event, player)"
             ></use>
-            <!-- <text class="playerText" :x="player.x" :y="player.y">
-              {{ player.positionName }}
-            </text> -->
           </g>
-        </g>
+        </g> -->
       </g>
     </g>
   </svg>
