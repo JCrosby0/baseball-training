@@ -27,6 +27,7 @@
       <div class="summary">
         <h2>Scenario: {{ currentScenario.title }}</h2>
         <p>{{ currentScenario.description }}</p>
+        <p>Runners: {{ currentScenario.runners.map((r) => r.positionName) }}</p>
         <div class="position-info">
           <ul class="left">
             <li>
@@ -116,31 +117,7 @@ export default {
       const dist = Math.round(Math.sqrt(fieldX ** 2 + fieldY ** 2));
       return { angle, dist };
     },
-    // d3Update() {
-    //   const t = d3.transition().duration(750).ease(d3.easeLinear);
-    //   const playerG = this.svg
-    //     .selectAll("players")
-    //     // .data(this.currentScenario.players, (d) => {
-    //     //   return d.positionName;
-    //     // })
-    //     .transition(t)
-    //     .attr("transform", (d) => {
-    //       console.log("d: ", d);
-    //       console.log(this.playerG);
-    //       return `translate(${this.x(
-    //         this.dePolarise(d.angle, d.dist).x
-    //       )} ${this.y(this.dePolarise(d.angle, d.dist).y)})`;
-    //     });
-    //   const runnerG = this.svg
-    //     .selectAll("runners")
-    //     // .data(this.currentScenario.runners, (d) => d.positionName)
-    //     .transition(t)
-    //     .attr("transform", (d) => {
-    //       return `translate(${this.x(
-    //         this.dePolarise(d.angle, d.dist).x
-    //       )} ${this.y(this.dePolarise(d.angle, d.dist).y)})`;
-    //     });
-    // },
+
     d3Update(data) {
       // d3 playing field setup
       const t = d3.transition().duration(750).ease(d3.easeLinear);
@@ -160,9 +137,7 @@ export default {
         d3.select(this)
           .transition()
           .attr("fill", "black")
-          .attr("r", radius * 2)
           .transition()
-          .attr("r", radius)
           .attr("fill", "red");
       }
       function dragstarted() {
@@ -171,8 +146,8 @@ export default {
       function dragged(event, d) {
         // handle ball
         if (d.type === "ball") {
-          ball.raise().attr("cx", event.x).attr("cy", event.y);
-          ballLine.attr("x1", event.x).attr("y1", event.y);
+          d3.selectAll(".ball").raise().attr("cx", event.x).attr("cy", event.y);
+          d3.selectAll(".ball-line").attr("x1", event.x).attr("y1", event.y);
         } else {
           // handle player
           d3.select(this)
@@ -184,18 +159,19 @@ export default {
       }
       const dragended = (event, d) => {
         const { angle, dist } = this.polarise(event.x, event.y);
-        let player;
+        let target;
+        console.log("data: ", data);
         switch (d.type) {
           case "ball":
-            player = data.balls[0];
+            target = data.balls[0];
             break;
           case "runner":
-            player = data.runners.find(
+            target = data.runners.find(
               (r) => r.positionNumber === d.positionNumber
             );
             break;
           case "player":
-            player = data.players.find(
+            target = data.players.find(
               (p) => p.positionNumber === d.positionNumber
             );
             break;
@@ -203,8 +179,12 @@ export default {
             console.log("unknown object type");
         }
 
-        player.angle = angle;
-        player.dist = dist;
+        target.angle = angle;
+        target.dist = dist;
+        console.log("target: ", target);
+        this.scenarios[this.currentScenarioIndex].balls = data.balls;
+        this.scenarios[this.currentScenarioIndex].players = data.players;
+        this.scenarios[this.currentScenarioIndex].runners = data.runners;
         // d3.select(d).attr("stroke", "black");
       };
       const drag = d3
@@ -378,7 +358,7 @@ body {
   align-items: flex-start;
 }
 .aside {
-  width: 200px;
+  width: 250px;
   border: 1px grey solid;
   height: 100%;
 }
@@ -386,7 +366,7 @@ body {
   flex: 0 0 auto;
 }
 .summary {
-  flex: 1 1 auto;
+  flex: 1 1 250px;
 }
 .svg-wrapper {
   width: min(80vh, 80vw);
@@ -426,4 +406,9 @@ body {
 /* .hidden {
   display: none;
 } */
+.player-g,
+.runner-g,
+.ball {
+  cursor: move;
+}
 </style>
