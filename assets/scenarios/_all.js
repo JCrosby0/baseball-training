@@ -1,5 +1,5 @@
 import { basesLoaded } from "./bl-default";
-import { defaultScenario } from "./defaultTemplate";
+import { defaultScenario } from "./template";
 import { hitRightCentre } from "./hit-to-right-centre";
 import { zrDefault } from "./zr-default";
 //https://probaseballinsider.com/baseball-instruction/outfield/outfield-backing-up-plays/

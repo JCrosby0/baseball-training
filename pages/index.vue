@@ -73,8 +73,10 @@
 <script>
 import SVGDiamond from "~/components/svg-diamond.vue";
 import * as d3 from "d3";
+import * as d3du from "~/assets/scripts/d3DiamondUtils";
 import { glovePaths } from "~/components/pathGlove";
 import { helmetPaths } from "~/components/pathHelmet";
+import { ballPaths } from "~/components/pathBall";
 import scenarios from "~/assets/scenarios/_all";
 
 export default {
@@ -92,16 +94,62 @@ export default {
       currentScenarioIndex: 0,
       currentStepIndex: 0,
       //durations
-      ballDuration: 2000,
-      playerDuration: 4350,
+      ballDuration: 350,
+      playerDuration: 350,
       //paths
       glovePaths,
       helmetPaths,
+      ballPaths,
       // d3 references
       svg: null, // the parent svg
       playerData: null, // players
-      x: null, // x scale
-      y: null, // y scale
+
+      zones: [
+        {
+          angle: 35,
+          dist: 100,
+          rx: 25,
+          ry: 10,
+          rotate: 45,
+        },
+        {
+          angle: 12.5,
+          dist: 125,
+          rx: 40,
+          ry: 15,
+          rotate: 20,
+        },
+        {
+          angle: -12.5,
+          dist: 125,
+          rx: 40,
+          ry: 15,
+          rotate: -20,
+        },
+        {
+          angle: -35,
+          dist: 100,
+          rx: 25,
+          ry: 10,
+          rotate: -45,
+        },
+      ],
+      infieldSectors: [
+        { a1: -45, a2: -25, dist: 325, flag1: 0, flag2: 1 },
+        { a1: -25, a2: 0, dist: 325, flag1: 0, flag2: 1 },
+        { a1: 0, a2: 25, dist: 325, flag1: 0, flag2: 1 },
+        { a1: 25, a2: 45, dist: 325, flag1: 0, flag2: 1 },
+      ],
+      outfieldSectors: [
+        { a1: -45, a2: -15, dist: 325, flag1: 0, flag2: 1 },
+        { a1: -15, a2: 15, dist: 325, flag1: 0, flag2: 1 },
+        { a1: 15, a2: 45, dist: 325, flag1: 0, flag2: 1 },
+      ],
+      sectors: [
+        { a1: -45, a2: -15, dist: 325, flag1: 0, flag2: 1 },
+        { a1: -15, a2: 15, dist: 325, flag1: 0, flag2: 1 },
+        { a1: 15, a2: 45, dist: 325, flag1: 0, flag2: 1 },
+      ],
     };
   },
   watch: {
@@ -128,150 +176,45 @@ export default {
     },
   },
   methods: {
-    //
-    translatePoint(d) {
-      return `translate(${this.x(this.dePolarise(d.angle, d.dist).x)} ${this.y(
-        this.dePolarise(d.angle, d.dist).y
-      )})`;
-    },
-    // take a runner distance around the bases as a float, where [0-1] is on the home-first base path, etc.
-    translateRunner(d) {
-      d.runnerPosition; // 0-1, 1-2, 2-3, 3-4
-      const bases = [
-        { angle: 90, dist: 0 },
-        { angle: 45, dist: 90 },
-        { angle: 0, dist: Math.sqrt(2 * 90 ** 2) },
-        { angle: -45, dist: 90 },
-      ];
-      const coords = bases.map((b) => {
-        return {
-          x: this.x(this.dePolarise(b.angle, b.dist).x),
-          y: this.y(this.dePolarise(b.angle, b.dist).y),
-        };
-      });
-      const runnerFloor = Math.max(0, Math.floor(d.runnerPosition));
-      const runnerCeil = Math.min(4, Math.ceil(d.runnerPosition));
-      const runnerFrac = d.runnerPosition % 1;
-
-      const runnerX =
-        coords[runnerFloor].x * (1 - runnerFrac) +
-        coords[runnerCeil].x * runnerFrac;
-      const runnerY =
-        coords[runnerFloor].y * (1 - runnerFrac) +
-        coords[runnerCeil].y * runnerFrac;
-      return `translate(${runnerX} ${runnerY})`;
-    },
-
-    // take 'baseball' coordinates (x = degrees from centre line, y = distance from home plate towards CF) and convert to cartesian coordinates (home plate: 0, 0)
-    dePolarise(angle, dist) {
-      const cartX = dist * Math.sin((angle * Math.PI) / 180);
-      const cartY = dist * Math.cos((angle * Math.PI) / 180);
-      return { x: cartX, y: cartY };
-    },
-
-    // takes mouse coordinates? relative coordinates on the svg?
-    // outputs polar coordinates
-    polarise(inputX, inputY) {
-      // remove d3 scale from the inputs
-      const fieldX = this.x.invert(inputX);
-      const fieldY = this.y.invert(inputY);
-      // convert to polar coordinates
-      const angle = Math.round(Math.atan(fieldX / fieldY) / (Math.PI / 180));
-      const dist = Math.round(Math.sqrt(fieldX ** 2 + fieldY ** 2));
-      return { angle, dist };
-    },
-
     d3Update(data) {
       // d3 playing field setup
-      const t = d3.transition().duration(750).ease(d3.easeLinear);
+      const t = d3.transition().duration(350).ease(d3.easeLinear);
+
+      // get the dimensions of the svg to setup up coordinate system
       const svgBG = document.querySelector("#fieldBackground");
       const width = svgBG.width ? svgBG.width.baseVal.value : 400;
       const height = svgBG.height ? svgBG.height.baseVal.value : 400;
+
+      // set up the d3 scales to convert between values and coordinates
+
+      // x is conceptually rotation from 3rd around to 1st, with 2nd = 0deg
+      // it ends up being x coordinate on the svg
+      const x = d3.scaleLinear().domain([-250, 250]).range([0, width]);
+
+      // y is conceptually distance in ft from home plate, towards CF
+      // it ends up being y coordinate on the svg
+      const y = d3
+        .scaleLinear()
+        .domain([0, 350])
+        .range([height - 115, 0]);
+
+      // group them as they get passed around together
+      const scales = { x, y };
+
+      // set up drag functionality, passing the current scenario for updating values
+      const drag = d3
+        .drag()
+        .on("start", d3du.dragstarted)
+        .on("drag", d3du.dragged)
+        .on("end", (event, d) => d3du.dragended(event, d, scales));
+
+      // d3 drawing
+      // create the svg
       const svg = d3
         .select("#playerOverlay")
         .attr("width", width)
         .attr("height", height);
       const g = svg.append("g");
-
-      // click and drag handlers
-      function clicked(event, d) {
-        if (event.defaultPrevented) return; // dragged
-
-        d3.select(this)
-          .transition()
-          .attr("fill", "black")
-          .transition()
-          .attr("fill", "red");
-      }
-      function dragstarted() {
-        // d3.select(this).attr("stroke", null);
-      }
-      function dragged(event, d) {
-        // handle ball
-        if (d.type === "ball") {
-          d3.selectAll(".ball").raise().attr("cx", event.x).attr("cy", event.y);
-          d3.selectAll(".ball-line").attr("x1", event.x).attr("y1", event.y);
-        } else {
-          // handle player, runner, target, anything that doesn't have multiple components
-          d3.select(this)
-            .raise()
-            .attr("transform", (d) => {
-              return `translate(${event.x} ${event.y})`;
-            });
-        }
-      }
-      const dragended = (event, d) => {
-        const { angle, dist } = this.polarise(event.x, event.y);
-        let target;
-        switch (d.type) {
-          case "ball":
-            target = data.balls[0];
-            break;
-          case "target":
-            target = data.targets[0];
-            break;
-          case "runner":
-            target = data.runners.find(
-              (r) => r.positionNumber === d.positionNumber
-            );
-            break;
-          case "player":
-            target = data.players.find(
-              (p) => p.positionNumber === d.positionNumber
-            );
-            break;
-          default:
-            console.log("unknown object type");
-        }
-
-        target.angle = angle;
-        target.dist = dist;
-        const scenario = this.scenarios[this.currentScenarioIndex];
-        scenario.balls = data.balls;
-        scenario.players = data.players;
-        scenario.runners = data.runners;
-        scenario.targets = data.targets;
-        // d3.select(d).attr("stroke", "black");
-      };
-      const drag = d3
-        .drag()
-        .on("start", dragstarted)
-        .on("drag", dragged)
-        .on("end", dragended);
-
-      // d3 scales
-      // x is conceptually rotation from 3rd around to 1st, with 2nd = 0
-      // it ends up being x coordinate on the svg
-
-      this.x = d3.scaleLinear().domain([-250, 250]).range([0, width]);
-      // y is conceptually distance in ft from home plate, towards CF
-      // it ends up being y coordinate on the svg
-      this.y = d3
-        .scaleLinear()
-        .domain([0, 350])
-        .range([height - 115, 0]);
-
-      // d3 drawing
 
       // players
       this.playerData = svg
@@ -283,8 +226,8 @@ export default {
             .append("g")
             .attr("class", "player-g")
             .call(drag)
-            .on("click", clicked)
-            .attr("transform", (d) => this.translatePoint(d));
+            .on("click", d3du.clicked)
+            .attr("transform", (d) => d3du.translatePoint(d, scales));
           this.glovePaths.forEach((path) => {
             playerDataEnter
               .append("path")
@@ -310,8 +253,8 @@ export default {
         (update) => {
           update
             .transition(t)
-            .duration(500)
-            .attr("transform", (d) => this.translatePoint(d));
+            .duration(350)
+            .attr("transform", (d) => d3du.translatePoint(d, scales));
         },
         (exit) => exit.remove()
       );
@@ -325,9 +268,9 @@ export default {
           const runnerDataEnter = enter
             .append("g")
             .attr("class", "runner-g")
-            .attr("transform", (d) => this.translateRunner(d))
+            .attr("transform", (d) => d3du.translateRunner(d, scales))
             .call(drag)
-            .on("click", clicked);
+            .on("click", d3du.clicked);
           this.helmetPaths.forEach((path) => {
             runnerDataEnter
               .append("path")
@@ -353,34 +296,7 @@ export default {
           update
             .transition(t)
             .duration(this.playerDuration)
-            .attr("transform", (d) => this.translateRunner(d));
-        },
-        (exit) => {
-          exit.remove();
-        }
-      );
-
-      // ball
-      const ballData = svg
-        .selectAll(".ball")
-        .data(data.balls, (d) => d.positionName);
-      ballData.join(
-        (enter) => {
-          enter
-            .append("circle")
-            .attr("class", "ball")
-            .attr("r", 5)
-            .on("click", clicked)
-            .attr("cx", (d) => this.x(this.dePolarise(d.angle, d.dist).x))
-            .attr("cy", (d) => this.y(this.dePolarise(d.angle, d.dist).y))
-            .call(drag);
-        },
-        (update) => {
-          update
-            .transition(t)
-            .duration(this.ballDuration)
-            .attr("cx", (d) => this.x(this.dePolarise(d.angle, d.dist).x))
-            .attr("cy", (d) => this.y(this.dePolarise(d.angle, d.dist).y));
+            .attr("transform", (d) => d3du.translateRunner(d, scales));
         },
         (exit) => {
           exit.remove();
@@ -396,21 +312,52 @@ export default {
           enter
             .append("line")
             .attr("class", "ball-line")
-            .attr("x1", (d) => this.x(this.dePolarise(d.angle, d.dist).x))
-            .attr("y1", (d) => this.y(this.dePolarise(d.angle, d.dist).y))
-            .attr("x2", (d) => this.x(this.dePolarise(0, 0).x))
-            .attr("y2", (d) => this.y(this.dePolarise(0, 0).y))
+            .attr("x1", (d) => d3du.dePolarise(d.angle, d.dist, scales).x)
+            .attr("y1", (d) => d3du.dePolarise(d.angle, d.dist, scales).y)
+            .attr("x2", (d) => d3du.dePolarise(d.angle, d.dist, scales).x)
+            .attr("y2", (d) => d3du.dePolarise(d.angle, d.dist, scales).y)
             .attr("stroke", "black")
             .attr("stroke-dasharay", "5");
         },
         (update) => {
           update
             .transition(t)
-            .duration(2000)
-            .attr("x1", (d) => this.x(this.dePolarise(d.angle, d.dist).x))
-            .attr("y1", (d) => this.y(this.dePolarise(d.angle, d.dist).y))
-            .attr("x2", (d) => this.x(this.dePolarise(0, 0).x))
-            .attr("y2", (d) => this.y(this.dePolarise(0, 0).y));
+            .duration(350)
+            .attr("x1", (d) => d3du.dePolarise(d.angle, d.dist, scales).x)
+            .attr("y1", (d) => d3du.dePolarise(d.angle, d.dist, scales).y)
+            .attr("x2", (d) => d3du.dePolarise(d.angle, d.dist, scales).x)
+            .attr("y2", (d) => d3du.dePolarise(d.angle, d.dist, scales).y);
+        },
+        (exit) => {
+          exit.remove();
+        }
+      );
+
+      // ball
+      const ballData = svg
+        .selectAll(".ball")
+        .data(data.balls, (d) => d.positionName);
+      ballData.join(
+        (enter) => {
+          const ballDataEnter = enter
+            .append("g")
+            .attr("class", "ball")
+            .attr("transform", (d) => d3du.translatePoint(d, scales))
+            .call(drag)
+            .on("click", d3du.clicked);
+          this.ballPaths.forEach((path) => {
+            ballDataEnter
+              .append("path")
+              .attr("class", "svg-ball")
+              .attr("transform", "translate(-10, 0) scale(0.0025)")
+              .attr("d", path);
+          });
+        },
+        (update) => {
+          update
+            .transition(t)
+            .duration(this.ballDuration)
+            .attr("transform", (d) => d3du.translatePoint(d, scales));
         },
         (exit) => {
           exit.remove();
@@ -425,7 +372,13 @@ export default {
         (enter) => {
           const targetDataEnter = enter
             .append("g")
-            .attr("transform", (d) => this.translatePoint(d))
+            .attr("class", (d) => {
+              if (d.angle === undefined || d.dist === undefined) {
+                return "hidden";
+              }
+              return "target";
+            })
+            .attr("transform", (d) => d3du.translatePoint(d, scales))
             .call(drag);
           targetDataEnter
             .append("circle")
@@ -447,15 +400,51 @@ export default {
         (update) => {
           update
             .transition(t)
-            .duration(500)
+            .duration(350)
             .attr("class", (d) => (d.angle || d.distance ? "hidden" : "target"))
-            .attr("cx", (d) => this.x(this.dePolarise(d.angle, d.dist).x))
-            .attr("cy", (d) => this.y(this.dePolarise(d.angle, d.dist).y));
+            .attr("cx", (d) => d3du.dePolarise(d.angle, d.dist, scales).x)
+            .attr("cy", (d) => d3du.dePolarise(d.angle, d.dist, scales).y);
         },
         (exit) => {
           exit.remove();
         }
       );
+
+      // zones
+      const zoneData = svg
+        .selectAll("zone")
+        .data(this.zones)
+        .enter()
+        .append("g")
+        .attr("transform", (d) => d3du.translatePoint(d, scales))
+        .append("ellipse")
+        .attr("class", "zone")
+        .attr("cx", (d) => 0)
+        .attr("cy", (d) => 0)
+        .attr("rx", (d) => d.rx)
+        .attr("ry", (d) => d.ry)
+        .attr("transform", (d) => `rotate(${d.rotate})`);
+
+      // sectors
+      const sectorData = svg
+        .selectAll("sector")
+        .data(this.sectors)
+        .enter()
+        .append("g")
+        // .attr("transform", (d) => d3du.translatePoint(d, scales))
+        .append("path")
+        .attr("class", "sector")
+        .attr("d", (d) => {
+          return `M  ${d3du.dePolarise(d.a1, d.dist, scales).x} ${
+            d3du.dePolarise(d.a1, d.dist, scales).y
+          }
+          A 520 520, 0, ${d.flag1}, ${d.flag2}, ${
+            d3du.dePolarise(d.a2, d.dist, scales).x
+          } ${d3du.dePolarise(d.a2, d.dist, scales).y}
+          L ${d3du.dePolarise(210, 3, scales).x} ${
+            d3du.dePolarise(210, 3, scales).y
+          } Z`;
+        });
     },
   },
 };
@@ -542,9 +531,14 @@ body {
 .svg-helmet {
 }
 .ball {
+  transform-origin: center;
   fill: white;
-  stroke: red;
-  stroke-width: 1px;
+  /* stroke: red;
+  stroke-width: 1px; */
+}
+
+.ball > path:first-of-type {
+  fill: red;
 }
 .svg-glove {
   stroke-width: 1px;
@@ -578,5 +572,16 @@ body {
 }
 .line {
   stroke-dasharray: 5px 30px 5px;
+}
+.zone {
+  fill: none;
+  stroke-width: 1px;
+  stroke: red;
+  stroke-dasharray: 5;
+}
+.sector {
+  fill: rgba(0 0 0 / 0.2);
+  stroke-width: 1px;
+  stroke: black;
 }
 </style>
