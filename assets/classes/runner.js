@@ -2,16 +2,22 @@ export default class Runners {
   runners;
   constructor(inArray) {
     this.runners = [];
-    for (let i = 0; i < 4; i++) {
-      if (inArray.includes(i)) {
-        this.runners.push(new Runner(i));
+    // for (let i = 0; i < 4; i++) {
+    //   if (inArray.includes(i)) {
+    //     this.runners.push(new Runner(i));
+    //   }
+    // }
+    inArray.forEach((number, index) => {
+      if (number === null || number === []) return;
+      if (number >= 0 && number <= 4) {
+        this.runners.push(new Runner(index, number));
       }
-    }
-    for (let i = 0; i < inArray.length; i++) {
-      if (Array.isArray(inArray[i]) && inArray[i].length === 2) {
-        this.runners.push(new Runner(i, ...inArray[i]));
-      }
-    }
+    });
+    // for (let i = 0; i < inArray.length; i++) {
+    //   if (Array.isArray(inArray[i]) && inArray[i].length === 2) {
+    //     this.runners.push(new Runner(i, null, ...inArray[i]));
+    //   }
+    // }
   }
 }
 const runnerDefaultLocations = [
@@ -32,11 +38,12 @@ export class Runner {
   positionNumber;
   angle;
   dist;
-  constructor(number, angle = null, dist = null) {
-    this.positionNumber = number;
+  constructor(index, number = null, angle = null, dist = null) {
+    this.positionNumber = index;
+    this.runnerPosition = number;
     this.type = "runner";
-    this.positionName = runnerNames[number];
-    this.angle = angle || runnerDefaultLocations[number].angle;
-    this.dist = dist || runnerDefaultLocations[number].dist;
+    this.positionName = runnerNames[index];
+    this.angle = angle || runnerDefaultLocations[index].angle;
+    this.dist = dist || runnerDefaultLocations[index].dist;
   }
 }

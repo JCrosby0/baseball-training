@@ -1,6 +1,7 @@
 import Scenario from "~/assets/classes/scenario";
 
-export const zrBaseHitToCF = new Scenario(
+export const zrBaseHitToCF = new Scenario("Base hit to centre field");
+zrBaseHitToCF.addStep(
   [
     [0, 80], //P
     [0, -5], //C
@@ -12,9 +13,8 @@ export const zrBaseHitToCF = new Scenario(
     [0, 240], //CF
     [12, 245], //RF
   ], // players
-  [[-90, 5], [], [], []], // runners
+  [0.5, null, null, null], // runners
   [0, 235], // ball
   [], //targets NYI
-  "Base hit to centre field",
   "Fielder responses to a hit to centre field" // description
 );

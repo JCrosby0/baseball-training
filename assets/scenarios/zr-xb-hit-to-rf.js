@@ -1,6 +1,7 @@
 import Scenario from "~/assets/classes/scenario";
 
-export const zrXBHitToRF = new Scenario(
+export const zrXBHitToRF = new Scenario("Extra bases hit to right");
+zrXBHitToRF.addStep(
   [
     [-65, 108], //P
     [0, -5], //C
@@ -12,9 +13,8 @@ export const zrXBHitToRF = new Scenario(
     [30, 275], //CF
     [40, 275], //RF
   ], // players
-  [[-90, 5], [], [], []], // runners
+  [1.5, null, null, null], // runners
   [42, 280], // ball
   [], //targets NYI
-  "Extra bases hit to right",
   "Fielder responses to a hit to right field" // description
 );

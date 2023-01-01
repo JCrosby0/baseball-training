@@ -1,6 +1,7 @@
 import Scenario from "~/assets/classes/scenario";
 
-export const basesLoaded = new Scenario(
+export const basesLoaded = new Scenario("Default - BL");
+basesLoaded.addStep(
   [
     [0, 57], //P
     [0, -5], //C
@@ -15,6 +16,5 @@ export const basesLoaded = new Scenario(
   [0, 1, 2, 3], // runners
   [-10, 60], // ball
   [], //targets NYI
-  "Default - BL",
-  "Default field layout scenario" // description
+  "Default field layout scenario" // description)
 );

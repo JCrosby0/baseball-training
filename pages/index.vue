@@ -6,16 +6,32 @@
     <div class="container">
       <div class="aside">
         <h2>Select a scenario:</h2>
-        <div v-for="(scen, i) in scenarios">
+        <div v-for="(scen, i) in scenarios" :key="'scenario' + i">
           <input
             type="radio"
             :id="scen.title"
             name="scenario"
-            class="hidden"
+            class=""
             :value="i"
             v-model="currentScenarioIndex"
           />
           <label :for="scen.title">{{ scen.title }}</label>
+        </div>
+        <h3>Select Step:</h3>
+        <div
+          class="step"
+          v-for="(step, index) in currentScenario.steps"
+          :key="'step-' + index"
+        >
+          <input
+            type="radio"
+            :id="'step-' + index"
+            name="step"
+            class=""
+            :value="index"
+            v-model="currentStepIndex"
+          />
+          <label :for="'step-' + index">{{ index }}</label>
         </div>
       </div>
       <div class="diamond">
@@ -26,20 +42,25 @@
       </div>
       <div class="summary">
         <h2>Scenario: {{ currentScenario.title }}</h2>
-        <p>{{ currentScenario.description }}</p>
-        <p>Runners: {{ currentScenario.runners.map((r) => r.positionName) }}</p>
+        <p>{{ currentStep.description }}</p>
+        <p>{{ currentStep.title }}</p>
+        <p>Runners: {{ currentStep.runners.map((r) => r.positionName) }}</p>
         <div class="position-info">
           <ul class="left">
             <li>
-              Ball: Angle: {{ currentScenario.balls[0].angle }}; Depth:
-              {{ currentScenario.balls[0].dist }}
+              Ball: Angle: {{ currentStep.balls[0].angle }}; Depth:
+              {{ currentStep.balls[0].dist }}
+            </li>
+            <li>
+              Target: Angle: {{ currentStep.targets[0].angle }}; Depth:
+              {{ currentStep.targets[0].dist }}
             </li>
             <br />
-            <li v-for="p in currentScenario.players">
+            <li v-for="p in currentStep.players" :key="p.positionName">
               {{ p.positionName }}: Angle: {{ p.angle }}; Depth: {{ p.dist }}
             </li>
             <br />
-            <li v-for="p in currentScenario.runners">
+            <li v-for="p in currentStep.runners" :key="p.positionName">
               {{ p.positionName }}: Angle: {{ p.angle }}; Depth: {{ p.dist }}
             </li>
           </ul>
@@ -51,9 +72,9 @@
 
 <script>
 import SVGDiamond from "~/components/svg-diamond.vue";
-import SVGGlove from "~/components/svg-glove.vue";
 import * as d3 from "d3";
-
+import { glovePaths } from "~/components/pathGlove";
+import { helmetPaths } from "~/components/pathHelmet";
 import scenarios from "~/assets/scenarios/_all";
 
 export default {
@@ -61,21 +82,21 @@ export default {
   components: {
     SVGDiamond,
   },
-  beforeMount() {
-    // console.log("before mount");
-    // console.log("this.currentScenario", this.currentScenario);
-    // this.d3Update(this.currentScenario);
-  },
   mounted() {
-    this.d3Update(this.currentScenario);
-    // console.log("mounted");
+    this.d3Update(this.currentStep);
   },
   data() {
     return {
       scale: 2.5,
       scenarios,
       currentScenarioIndex: 0,
-      currentScenario: scenarios[0],
+      currentStepIndex: 0,
+      //durations
+      ballDuration: 2000,
+      playerDuration: 4350,
+      //paths
+      glovePaths,
+      helmetPaths,
       // d3 references
       svg: null, // the parent svg
       playerData: null, // players
@@ -84,11 +105,26 @@ export default {
     };
   },
   watch: {
+    currentStepIndex(n, o) {
+      if (n !== o) {
+        this.d3Update(this.currentStep);
+      }
+    },
     currentScenarioIndex(n, o) {
       if (n !== o) {
-        this.currentScenario = this.scenarios[this.currentScenarioIndex];
-        this.d3Update(this.currentScenario);
+        this.currentStepIndex = 0;
+
+        this.d3Update(this.currentStep);
       }
+    },
+  },
+  computed: {
+    currentScenario() {
+      return this.scenarios[this.currentScenarioIndex];
+    },
+    currentStep() {
+      if (!this.currentScenario) return {};
+      return this.currentScenario.steps[this.currentStepIndex];
     },
   },
   methods: {
@@ -97,6 +133,33 @@ export default {
       return `translate(${this.x(this.dePolarise(d.angle, d.dist).x)} ${this.y(
         this.dePolarise(d.angle, d.dist).y
       )})`;
+    },
+    // take a runner distance around the bases as a float, where [0-1] is on the home-first base path, etc.
+    translateRunner(d) {
+      d.runnerPosition; // 0-1, 1-2, 2-3, 3-4
+      const bases = [
+        { angle: 90, dist: 0 },
+        { angle: 45, dist: 90 },
+        { angle: 0, dist: Math.sqrt(2 * 90 ** 2) },
+        { angle: -45, dist: 90 },
+      ];
+      const coords = bases.map((b) => {
+        return {
+          x: this.x(this.dePolarise(b.angle, b.dist).x),
+          y: this.y(this.dePolarise(b.angle, b.dist).y),
+        };
+      });
+      const runnerFloor = Math.max(0, Math.floor(d.runnerPosition));
+      const runnerCeil = Math.min(4, Math.ceil(d.runnerPosition));
+      const runnerFrac = d.runnerPosition % 1;
+
+      const runnerX =
+        coords[runnerFloor].x * (1 - runnerFrac) +
+        coords[runnerCeil].x * runnerFrac;
+      const runnerY =
+        coords[runnerFloor].y * (1 - runnerFrac) +
+        coords[runnerCeil].y * runnerFrac;
+      return `translate(${runnerX} ${runnerY})`;
     },
 
     // take 'baseball' coordinates (x = degrees from centre line, y = distance from home plate towards CF) and convert to cartesian coordinates (home plate: 0, 0)
@@ -149,7 +212,7 @@ export default {
           d3.selectAll(".ball").raise().attr("cx", event.x).attr("cy", event.y);
           d3.selectAll(".ball-line").attr("x1", event.x).attr("y1", event.y);
         } else {
-          // handle player
+          // handle player, runner, target, anything that doesn't have multiple components
           d3.select(this)
             .raise()
             .attr("transform", (d) => {
@@ -160,10 +223,12 @@ export default {
       const dragended = (event, d) => {
         const { angle, dist } = this.polarise(event.x, event.y);
         let target;
-        console.log("data: ", data);
         switch (d.type) {
           case "ball":
             target = data.balls[0];
+            break;
+          case "target":
+            target = data.targets[0];
             break;
           case "runner":
             target = data.runners.find(
@@ -181,10 +246,11 @@ export default {
 
         target.angle = angle;
         target.dist = dist;
-        console.log("target: ", target);
-        this.scenarios[this.currentScenarioIndex].balls = data.balls;
-        this.scenarios[this.currentScenarioIndex].players = data.players;
-        this.scenarios[this.currentScenarioIndex].runners = data.runners;
+        const scenario = this.scenarios[this.currentScenarioIndex];
+        scenario.balls = data.balls;
+        scenario.players = data.players;
+        scenario.runners = data.runners;
+        scenario.targets = data.targets;
         // d3.select(d).attr("stroke", "black");
       };
       const drag = d3
@@ -219,21 +285,27 @@ export default {
             .call(drag)
             .on("click", clicked)
             .attr("transform", (d) => this.translatePoint(d));
-          playerDataEnter
-            .append("circle")
-            .attr("fill", "red")
-            .attr("stroke", "black")
-            .attr("cx", 0)
-            .attr("cy", 0)
-            .attr("r", 5);
+          this.glovePaths.forEach((path) => {
+            playerDataEnter
+              .append("path")
+              .attr("class", "svg-glove")
+              .attr("d", path)
+              .attr("transform", "translate(-14, -18) scale(0.12)");
+          });
+          // playerDataEnter
+          //   .append("circle")
+          //   .attr("fill", "red")
+          //   .attr("stroke", "black")
+          //   .attr("cx", 0)
+          //   .attr("cy", 0)
+          //   .attr("r", 5);
           playerDataEnter
             .append("text")
-            .attr("x", 8)
-            .attr("y", 4)
-            .text((d) => d.positionName)
-            .attr("font-size", "16px")
-            .attr("font", "sans-serif")
-            .attr("fill", "white");
+            .attr("x", 0)
+            .attr("y", 10)
+            .attr("class", "text")
+            // .attr("text-anchor", "middle")
+            .text((d) => d.positionName);
         },
         (update) => {
           update
@@ -253,31 +325,35 @@ export default {
           const runnerDataEnter = enter
             .append("g")
             .attr("class", "runner-g")
-            .attr("transform", (d) => this.translatePoint(d))
+            .attr("transform", (d) => this.translateRunner(d))
             .call(drag)
             .on("click", clicked);
-          runnerDataEnter
-            .append("circle")
-            .attr("fill", "blue")
-            .attr("stroke", "black")
-            .attr("cx", 0)
-            .attr("cy", 0)
-            .attr("r", 5);
+          this.helmetPaths.forEach((path) => {
+            runnerDataEnter
+              .append("path")
+              .attr("class", "svg-helmet")
+              .attr("d", path)
+              .attr("transform", "translate(15, 5) scale(0.004) rotate(180)");
+          });
+          // runnerDataEnter
+          //   .append("circle")
+          //   .attr("fill", "blue")
+          //   .attr("stroke", "black")
+          //   .attr("cx", 0)
+          //   .attr("cy", 0)
+          //   .attr("r", 5);
           runnerDataEnter
             .append("text")
-            .attr("x", 8)
-            .attr("y", 4)
-            .text((d) => d.positionName)
-            .attr("font-size", "16px")
-            .attr("font", "sans-serif")
-            .attr("fill", "white")
-            .attr("cursor", "none");
+            .attr("x", 0)
+            .attr("y", 6)
+            .attr("class", "text")
+            .text((d) => d.positionName);
         },
         (update) => {
           update
             .transition(t)
-            .duration(500)
-            .attr("transform", (d) => this.translatePoint(d));
+            .duration(this.playerDuration)
+            .attr("transform", (d) => this.translateRunner(d));
         },
         (exit) => {
           exit.remove();
@@ -293,16 +369,16 @@ export default {
           enter
             .append("circle")
             .attr("class", "ball")
-            .attr("fill", "white")
-            .attr("stroke", "red")
             .attr("r", 5)
             .on("click", clicked)
+            .attr("cx", (d) => this.x(this.dePolarise(d.angle, d.dist).x))
+            .attr("cy", (d) => this.y(this.dePolarise(d.angle, d.dist).y))
             .call(drag);
         },
         (update) => {
           update
             .transition(t)
-            .duration(500)
+            .duration(this.ballDuration)
             .attr("cx", (d) => this.x(this.dePolarise(d.angle, d.dist).x))
             .attr("cy", (d) => this.y(this.dePolarise(d.angle, d.dist).y));
         },
@@ -320,6 +396,8 @@ export default {
           enter
             .append("line")
             .attr("class", "ball-line")
+            .attr("x1", (d) => this.x(this.dePolarise(d.angle, d.dist).x))
+            .attr("y1", (d) => this.y(this.dePolarise(d.angle, d.dist).y))
             .attr("x2", (d) => this.x(this.dePolarise(0, 0).x))
             .attr("y2", (d) => this.y(this.dePolarise(0, 0).y))
             .attr("stroke", "black")
@@ -328,9 +406,51 @@ export default {
         (update) => {
           update
             .transition(t)
-            .duration(500)
+            .duration(2000)
             .attr("x1", (d) => this.x(this.dePolarise(d.angle, d.dist).x))
-            .attr("y1", (d) => this.y(this.dePolarise(d.angle, d.dist).y));
+            .attr("y1", (d) => this.y(this.dePolarise(d.angle, d.dist).y))
+            .attr("x2", (d) => this.x(this.dePolarise(0, 0).x))
+            .attr("y2", (d) => this.y(this.dePolarise(0, 0).y));
+        },
+        (exit) => {
+          exit.remove();
+        }
+      );
+
+      // targets
+      const targetData = svg
+        .selectAll(".target")
+        .data(data.targets, (d) => d.positionName);
+      targetData.join(
+        (enter) => {
+          const targetDataEnter = enter
+            .append("g")
+            .attr("transform", (d) => this.translatePoint(d))
+            .call(drag);
+          targetDataEnter
+            .append("circle")
+            .attr("class", "target circle")
+            .attr("cx", 0)
+            .attr("cy", 0)
+            .attr("r", "20");
+          targetDataEnter
+            .append("line")
+            .attr("class", "target line")
+            .attr("x1", -20)
+            .attr("x2", 20);
+          targetDataEnter
+            .append("line")
+            .attr("class", "target line")
+            .attr("y1", -20)
+            .attr("y2", 20);
+        },
+        (update) => {
+          update
+            .transition(t)
+            .duration(500)
+            .attr("class", (d) => (d.angle || d.distance ? "hidden" : "target"))
+            .attr("cx", (d) => this.x(this.dePolarise(d.angle, d.dist).x))
+            .attr("cy", (d) => this.y(this.dePolarise(d.angle, d.dist).y));
         },
         (exit) => {
           exit.remove();
@@ -342,6 +462,10 @@ export default {
 </script>
 
 <style>
+:root {
+  --color-team-1: coral;
+  --color-team-2: lightblue;
+}
 *,
 html,
 body {
@@ -372,7 +496,6 @@ body {
   width: min(80vh, 80vw);
   aspect-ratio: 1.15;
   overflow: hidden;
-  border: 1px red solid;
   position: relative;
 }
 .svg {
@@ -403,12 +526,57 @@ body {
 .position-info {
   padding: 1em;
 }
-/* .hidden {
+.hidden {
   display: none;
-} */
+}
 .player-g,
 .runner-g,
-.ball {
+.ball,
+.target {
   cursor: move;
+  stroke-width: 0.11px;
+  stroke: black;
+  fill: rgba(255 255 255 / 0.01);
+}
+.svg-glove,
+.svg-helmet {
+}
+.ball {
+  fill: white;
+  stroke: red;
+  stroke-width: 1px;
+}
+.svg-glove {
+  stroke-width: 1px;
+  stroke: var(--color-team-1);
+  fill: var(--color-team-1);
+}
+.svg-glove:first-of-type {
+  fill: black;
+}
+.svg-glove:nth-of-type(4) {
+  fill: var(--color-team-1);
+}
+.svg-helmet {
+  stroke-width: 300px;
+  stroke: black;
+  fill: var(--color-team-2);
+}
+.text {
+  pointer-events: none;
+  /* cursor: none; */
+  fill: black;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 12px;
+  text-rendering: optimizeLegibility;
+  text-anchor: middle;
+}
+.target {
+  stroke: red;
+  stroke-width: 1px;
+  fill: rgba(255 0 0 / 0.1);
+}
+.line {
+  stroke-dasharray: 5px 30px 5px;
 }
 </style>

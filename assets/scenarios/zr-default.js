@@ -1,6 +1,7 @@
 import Scenario from "~/assets/classes/scenario";
 
-export const zrDefault = new Scenario(
+export const zrDefault = new Scenario("Default - ZR");
+zrDefault.addStep(
   [
     [0, 57], //P
     [0, -5], //C
@@ -15,6 +16,5 @@ export const zrDefault = new Scenario(
   [0], // runners
   [-10, 60], // ball
   [], //targets NYI
-  "Default - ZR",
   "Default field layout scenario" // description
 );

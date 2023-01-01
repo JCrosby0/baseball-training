@@ -1,6 +1,9 @@
 import Scenario from "~/assets/classes/scenario";
 
 export const zrXBHitToRCGap = new Scenario(
+  "Extra bases hit to right-center gap"
+);
+zrXBHitToRCGap.addStep(
   [
     [-64, 100], //P
     [0, -5], //C
@@ -12,9 +15,8 @@ export const zrXBHitToRCGap = new Scenario(
     [17, 258], //CF
     [23, 259], //RF
   ], // players
-  [[-90, 5], [], [], []], // runners
+  [1.5, null, null, null], // runners
   [20, 254], // ball
   [], //targets NYI
-  "Extra bases hit to right-center gap",
   "Fielder responses to a hit to right field" // description
 );

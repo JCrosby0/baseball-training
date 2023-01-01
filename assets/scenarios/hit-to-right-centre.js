@@ -1,6 +1,7 @@
 import Scenario from "~/assets/classes/scenario";
 
-export const hitRightCentre = new Scenario(
+export const hitRightCentre = new Scenario("Hit to Right-Centre-Field");
+hitRightCentre.addStep(
   [
     [-67, 91], //P
     [0, -5], //C
@@ -12,9 +13,8 @@ export const hitRightCentre = new Scenario(
     [17, 269], //CF
     [24, 293], //RF
   ], // players
-  [[20, 100], [-20, 100], [], [135, 25]], // runners
+  [0.5, 1.5, null, 3.5], // runners
   [17, 257], // ball
   [], //targets NYI
-  "Hit to Right-Centre-Field",
   "Fielder responses to a hit to right center field" // description
 );
