@@ -251,7 +251,6 @@ export default {
       }
     },
     endDrag(evt, player) {
-      console.log("endDrag evt: ", evt);
       evt.target.classList.remove("red");
       this.selectedPlayer = null;
     },

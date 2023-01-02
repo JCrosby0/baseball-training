@@ -8,9 +8,16 @@
     "postinstall": "nuxt prepare"
   },
   "devDependencies": {
-    "nuxt": "3.0.0"
+    "@nuxtjs/supabase": "^0.3.0",
+    "@nuxtjs/tailwindcss": "^6.2.0",
+    "nuxt": "3.0.0",
+    "prettier": "^2.8.1",
+    "prettier-plugin-tailwindcss": "^0.2.1"
   },
   "dependencies": {
-    "d3": "^7.7.0"
+    "@pinia/nuxt": "^0.4.6",
+    "@supabase/supabase-js": "^2.2.3",
+    "d3": "^7.7.0",
+    "pinia": "^2.0.28"
   }
 }
