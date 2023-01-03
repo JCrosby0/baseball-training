@@ -1,7 +1,7 @@
 <template >
   <div v-if="user" :class="{ dark: darkMode }">
-    <NavBar />
-    <NuxtPage />
+    <NavBar :darkMode="darkMode" @toggleDarkMode="toggleDarkMode" />
+    <NuxtPage class="" />
   </div>
   <Auth v-else />
 
@@ -12,10 +12,14 @@
 const config = useRuntimeConfig();
 const appConfig = useAppConfig();
 
-const darkMode = ref(true);
+const darkMode = ref(false);
 
 const { auth } = useSupabaseClient();
 const user = useSupabaseUser();
+
+const toggleDarkMode = () => {
+  darkMode.value = !darkMode.value
+}
 
 </script>
 

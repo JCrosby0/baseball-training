@@ -1,5 +1,5 @@
 <template>
-  <div class="page">
+  <div class="">
     <nav>
       <h1>Diamond Training</h1>
     </nav>
@@ -7,30 +7,12 @@
       <div class="aside">
         <h2>Select a scenario:</h2>
         <div v-for="(scen, i) in scenarios" :key="'scenario' + i">
-          <input
-            type="radio"
-            :id="scen.title"
-            name="scenario"
-            class=""
-            :value="i"
-            v-model="currentScenarioIndex"
-          />
+          <input type="radio" :id="scen.title" name="scenario" class="" :value="i" v-model="currentScenarioIndex" />
           <label :for="scen.title">{{ scen.title }}</label>
         </div>
         <h3>Select Step:</h3>
-        <div
-          class="step"
-          v-for="(step, index) in currentScenario.steps"
-          :key="'step-' + index"
-        >
-          <input
-            type="radio"
-            :id="'step-' + index"
-            name="step"
-            class=""
-            :value="index"
-            v-model="currentStepIndex"
-          />
+        <div class="step" v-for="(step, index) in currentScenario.steps" :key="'step-' + index">
+          <input type="radio" :id="'step-' + index" name="step" class="" :value="index" v-model="currentStepIndex" />
           <label :for="'step-' + index">{{ index }}</label>
         </div>
       </div>
@@ -243,15 +225,12 @@ export default {
         .append("path")
         .attr("class", "sector")
         .attr("d", (d) => {
-          return `M  ${d3du.dePolarise(d.a1, d.dist, scales).x} ${
-            d3du.dePolarise(d.a1, d.dist, scales).y
-          }
-          A 520 520, 0, ${d.flag1}, ${d.flag2}, ${
-            d3du.dePolarise(d.a2, d.dist, scales).x
-          } ${d3du.dePolarise(d.a2, d.dist, scales).y}
-          L ${d3du.dePolarise(210, 3, scales).x} ${
-            d3du.dePolarise(210, 3, scales).y
-          } Z`;
+          return `M  ${d3du.dePolarise(d.a1, d.dist, scales).x} ${d3du.dePolarise(d.a1, d.dist, scales).y
+            }
+          A 520 520, 0, ${d.flag1}, ${d.flag2}, ${d3du.dePolarise(d.a2, d.dist, scales).x
+            } ${d3du.dePolarise(d.a2, d.dist, scales).y}
+          L ${d3du.dePolarise(210, 3, scales).x} ${d3du.dePolarise(210, 3, scales).y
+            } Z`;
         });
 
       // players
@@ -457,12 +436,14 @@ export default {
   --color-team-1: coral;
   --color-team-2: lightblue;
 }
+
 *,
 html,
 body {
   margin: 0;
   padding: 0;
 }
+
 .container {
   /* min-height: 100vh; */
   max-width: 100vw;
@@ -472,23 +453,28 @@ body {
   justify-content: space-between;
   align-items: flex-start;
 }
+
 .aside {
   width: 250px;
   border: 1px grey solid;
   height: 100%;
 }
+
 .main {
   flex: 0 0 auto;
 }
+
 .summary {
   flex: 1 1 250px;
 }
+
 .svg-wrapper {
   width: min(80vh, 80vw);
   aspect-ratio: 1.15;
   overflow: hidden;
   position: relative;
 }
+
 .svg {
   position: absolute;
   top: 0;
@@ -497,6 +483,11 @@ body {
   margin: 10px auto;
   /* margin: auto; */
 }
+
+.svg-diamond {
+  background-color: green;
+}
+
 .players {
   width: 100%;
   height: 100%;
@@ -506,20 +497,25 @@ body {
   translate: 35px -300px;
   scale: 1;
 }
+
 .player {
   position: absolute;
   rotate: 45deg;
   color: white;
 }
+
 .left {
   text-align: left;
 }
+
 .position-info {
   padding: 1em;
 }
+
 .hidden {
   display: none;
 }
+
 .player-g,
 .runner-g,
 .ball,
@@ -529,9 +525,10 @@ body {
   stroke: black;
   fill: rgba(255 255 255 / 0.01);
 }
+
 .svg-glove,
-.svg-helmet {
-}
+.svg-helmet {}
+
 .ball {
   transform-origin: center;
   fill: white;
@@ -539,25 +536,30 @@ body {
   stroke-width: 1px; */
 }
 
-.ball > path:first-of-type {
+.ball>path:first-of-type {
   fill: red;
 }
+
 .svg-glove {
   stroke-width: 1px;
   stroke: var(--color-team-1);
   fill: var(--color-team-1);
 }
+
 .svg-glove:first-of-type {
   fill: black;
 }
+
 .svg-glove:nth-of-type(4) {
   fill: var(--color-team-1);
 }
+
 .svg-helmet {
   stroke-width: 300px;
   stroke: black;
   fill: var(--color-team-2);
 }
+
 .text {
   pointer-events: none;
   /* cursor: none; */
@@ -567,23 +569,31 @@ body {
   text-rendering: optimizeLegibility;
   text-anchor: middle;
 }
+
 .target {
   stroke: red;
   stroke-width: 1px;
   fill: rgba(255 0 0 / 0.1);
 }
+
 .line {
   stroke-dasharray: 5px 30px 5px;
 }
+
 .zone {
   fill: none;
   stroke-width: 1px;
   stroke: red;
   stroke-dasharray: 5;
 }
+
 .sector {
   fill: rgba(0 0 0 / 0.2);
   stroke-width: 1px;
   stroke: black;
+}
+
+.grass {
+  fill: green;
 }
 </style>

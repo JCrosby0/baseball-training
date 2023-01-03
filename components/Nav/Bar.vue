@@ -2,11 +2,15 @@
   <nav class="bg-white border-gray-200 px-2 sm:px-4 py-2.5 rounded dark:bg-gray-900">
     <div class="container flex flex-wrap items-center justify-between mx-auto">
       <div href="/" class="flex h-fit">
-        <NuxtLink class="p-3 text-xl font-semibold whitespace-nowrap dark:text-white" to="/">
+        <NuxtLink class="p-3 text-xl font-semibold whitespace-nowrap text-black dark:text-white" to="/">
           Baseball
           Training
         </NuxtLink>
       </div>
+      <Slider :status="darkMode" @toggle="toggleDarkMode" rounded class="p-4 text-black dark:text-white">
+        <template #before>○</template>
+        <template #after>●</template>
+      </Slider>
       <div class="flex items-center md:order-2">
         <button type="button"
           class="flex mr-3 text-sm bg-gray-800 rounded-full md:mr-0 focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600"
@@ -63,6 +67,10 @@
 
 <script setup>
 
+const props = defineProps({
+  darkMode: Boolean
+})
+
 const accountOpen = ref(false)
 const menuOpen = ref(true)
 
@@ -71,6 +79,11 @@ const toggleAccount = () => {
 }
 const toggleMenu = () => {
   menuOpen.value = !menuOpen.value
+}
+
+const emit = defineEmits(['toggleDarkMode'])
+const toggleDarkMode = () => {
+  emit('toggleDarkMode')
 }
 const closeMenu = () => {
   menuOpen.value = false

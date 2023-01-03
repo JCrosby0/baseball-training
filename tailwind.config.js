@@ -3,7 +3,7 @@ export default {
   content: [
     "./components/**/*.{js,vue,ts}",
     "./layouts/**/*.vue",
-    // "./pages/**/*.vue",
+    "./pages/**/*.vue",
     "./plugins/**/*.{js,ts}",
   ],
   darkMode: 'class',
@@ -23,12 +23,12 @@ export default {
     },
   },
   corePlugins: {
-    textOpacity: false,
-    backgroundOpacity: false,
-    borderOpacity: false,
-    divideOpacity: false,
-    placeholderOpacity: false,
-    ringOpacity: false,
+    // textOpacity: false,
+    // backgroundOpacity: false,
+    // borderOpacity: false,
+    // divideOpacity: false,
+    // placeholderOpacity: false,
+    // ringOpacity: false,
   },
   plugins: [],
 };

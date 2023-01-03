@@ -1,28 +1,12 @@
 <template>
   <!-- :style="svgDiamond" -->
-  <svg
-    ref="diamondSVG"
-    class="svg-diamond drop-zone"
-    viewBox="0 0 500 420"
-    cy-data="diamond"
-    xmlns="http://www.w3.org/2000/svg"
-  >
+  <svg ref="diamondSVG" class="svg-diamond drop-zone" viewBox="0 0 500 420" cy-data="diamond"
+    xmlns="http://www.w3.org/2000/svg">
     <defs>
       <!-- define a base, origin = center -->
-      <rect
-        id="base"
-        class="base"
-        width="1.5"
-        height="1.5"
-        x="-0.75"
-        y="-0.75"
-      />
+      <rect id="base" class="base" width="1.5" height="1.5" x="-0.75" y="-0.75" />
       <!-- shift origin to right for first-->
-      <g
-        id="first-base"
-        transform-origin="0.75 0.75"
-        :transform="`translate(-0.75 -0.75) scale(${baseScale})`"
-      >
+      <g id="first-base" transform-origin="0.75 0.75" :transform="`translate(-0.75 -0.75) scale(${baseScale})`">
         <use href="#base"></use>
       </g>
       <!-- origin remains for second -->
@@ -30,105 +14,62 @@
         <use href="#base"></use>
       </g>
       <!-- shift origin to left for third-->
-      <g
-        id="third-base"
-        transform-origin="-0.75 -0.75"
-        :transform="`translate(0.75 0.75) scale(${baseScale})`"
-      >
+      <g id="third-base" transform-origin="-0.75 -0.75" :transform="`translate(0.75 0.75) scale(${baseScale})`">
         <use href="#base"></use>
       </g>
       <!-- home plate defs -->
       <clipPath id="home-plate-clip-path">
         <rect width="30" height="30" transform="rotate(45)"></rect>
       </clipPath>
-      <rect
-        id="home-plate-base"
-        class="base"
-        :width="17"
-        :height="17"
-        :x="-8.5"
-        :y="0"
-      />
+      <rect id="home-plate-base" class="base" :width="17" :height="17" :x="-8.5" :y="0" />
       <!-- home plate -->
-      <g
-        :transform="`rotate(225) scale(${baseScale})`"
-        transform-origin="0 0"
-        id="home-plate"
-      >
+      <g :transform="`rotate(225) scale(${baseScale})`" transform-origin="0 0" id="home-plate">
         <!-- convert inches to feet -->
         <g transform="scale(0.08333)">
-          <use
-            clip-path="url(#home-plate-clip-path)"
-            href="#home-plate-base"
-            fill="blue"
-          />
+          <use clip-path="url(#home-plate-clip-path)" href="#home-plate-base" fill="blue" />
         </g>
       </g>
       <!-- pitcher mound -->
       <!-- dirt -->
       <circle id="pitcher-mound" class="dirt" cx="0" cy="0" r="9" />
       <!-- rubber -->
-      <rect
-        id="pitcher-rubber"
-        class="base"
-        width="2"
-        height="0.5"
-        x="-1"
-        y="-0.25"
-      />
+      <rect id="pitcher-rubber" class="base" width="2" height="0.5" x="-1" y="-0.25" />
       <g id="pitcher">
         <use href="#pitcher-mound"></use>
-        <use
-          href="#pitcher-rubber"
-          transform-origin="(0, 0)"
-          :transform="`rotate(45) scale(${baseScale})`"
-        ></use>
+        <use href="#pitcher-rubber" transform-origin="(0, 0)" :transform="`rotate(45) scale(${baseScale})`"></use>
       </g>
       <!-- <circle id="player" class="player" cx="0" cy="0" r="5"></circle> -->
+
+
     </defs>
 
     <title>Baseball Diamond</title>
     <g transform="translate(185,280) scale(1.0) rotate(315)">
       <!-- outfield and deadball -->
-      <path
-        id="outfield-arc"
-        class="grass"
-        d="M -60, 90
+      <path id="outfield-arc" class="grass" style="fill: rgba(0, 102, 0, 0.8)" d="M -60, 90
         a 60 60 1 0 0 60 60
         l120, 0
         l205,-60
         a 325 325 60 0 0 -325 -325
         l-60,205
         l0,120
-        "
-      />
+        " />
       <!-- infield dirt -->
-      <path
-        id="infield-arc"
-        class="dirt"
-        d="M-3,93 
+      <path id="infield-arc" class="dirt" d="M-3,93 
           l0,-128 
           a95,95 0 0 1 128 128
-          "
-      />
+          " />
       <!-- infield grass -->
-      <path
-        id="infield"
-        class="grass"
-        d="M0,0 
+      <path id="infield" class="grass" d="M0,0 
         l90,0
         l0,90
         l-90,0
         l0,-90
-      "
-      />
+      " />
       <!-- home plate dirt -->
       <circle id="home-circle" class="dirt" cx="0" cy="90" r="13" />
       <!-- bases dirt -->
-      <path
-        id="base-arcs"
-        class="dirt"
-        d="M 90,90
+      <path id="base-arcs" class="dirt" d="M 90,90
           l -13,0
           a 13 13 0 0 1 13 -13
           M 90 0
@@ -137,25 +78,13 @@
           M 0 0
           l 13 0
           a 13 13 0 0 1 -13 13
-          "
-      />
+          " />
       <!-- base path -->
-      <rect
-        id="diamond-dirt"
-        class="dirt"
-        transform="translate(1.5, 1.5)"
-        width="87.5px"
-        height="87.5px"
-      />
+      <rect id="diamond-dirt" class="dirt" transform="translate(1.5, 1.5)" width="87.5px" height="87.5px" />
       <!-- foul ball lines -->
-      <path
-        id="foul-lines"
-        d="M 0,-235
+      <path id="foul-lines" d="M 0,-235
           l 0,325
-          l 325,0"
-        class="paint"
-        data-cy="foul-lines"
-      />
+          l 325,0" class="paint" data-cy="foul-lines" />
       <!-- base lines -->
       <rect id="diamond-line" class="paint" width="90px" height="90px" />
       <!-- home base coordinates -->
@@ -167,23 +96,6 @@
         <use href="#third-base" :x="0" :y="-90" />
         <use href="#home-plate" :x="0" :y="0" />
         <use href="#pitcher" :x="42.6665" :y="-42.6665" />
-
-        <!-- Players -->
-        <!-- <g>
-          <g v-for="player in players" :key="player.positionNumber">
-            <use
-              :id="player.positionName"
-              href="#player"
-              :x="player.x"
-              :y="player.y"
-              class="draggable"
-              @mousedown="startDrag($event, player)"
-              @mousemove="drag($event, player)"
-              @mouseup="endDrag($event, player)"
-              @mouseleave="endDrag($event, player)"
-            ></use>
-          </g>
-        </g> -->
       </g>
     </g>
   </svg>
@@ -265,51 +177,49 @@ export default {
   display: auto;
   fill: none;
 }
+
 #diamond-dirt {
   stroke-width: 3px;
   stroke: #442200;
   fill: none;
 }
+
 .paint {
   stroke-width: 0.33px;
   stroke: #fdb;
   fill: none;
 }
+
 #home-circle {
   stroke-width: none;
 }
+
 #base-arcs {
   stroke-width: 2px;
 }
+
 #pitcher-mound {
   stroke-width: 1px;
   fill: #442200;
 }
+
 #infield-arc {
   stroke-width: 1px;
 }
+
 .dirt {
   fill: #442200;
 }
+
 .grass {
   fill: rgba(0, 102, 0, 0.8);
 }
+
 .base {
   fill: rgb(255 255 255 / 0.5);
 }
+
 .red {
   fill: red;
-}
-/* .player {
-  stroke: black;
-  stroke-width: 1px;
-  fill: white;
-  cursor: move;
-} */
-.playerText {
-  font: 16px sans-serif;
-  fill: white;
-  stroke: black;
-  stroke-width: 0.5px;
 }
 </style>

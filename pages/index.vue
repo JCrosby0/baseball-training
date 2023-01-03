@@ -1,10 +1,10 @@
 <template>
-  <div class="container" style="padding: 50px 0 100px 0">
+  <div class="container bg-white dark:bg-gray-900 " style="padding: 50px 0 100px 0">
     <section class="flex flex-row">
       <main class="flex-grow">
-        <h1 class="text-4xl">Welcome to Baseball Training</h1>
-        <h2 class="text-xs">Powered by Crosby Solutions</h2>
-        <p>This portal will help you develop your baseball IQ</p>
+        <h1 class="text-4xl text-black dark:text-white">Welcome to Baseball Training</h1>
+        <h2 class="text-xs text-black dark:text-white">Powered by Crosby Solutions</h2>
+        <p class=" text-black dark:text-white">Helping you train your baseball IQ</p>
       </main>
       <aside class="w-40">
       </aside>
