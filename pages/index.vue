@@ -1,5 +1,5 @@
 <template>
-  <div class="container bg-white dark:bg-gray-900 " style="padding: 50px 0 100px 0">
+  <div class="container" style="padding: 50px 0 100px 0">
     <section class="flex flex-row">
       <main class="flex-grow">
         <h1 class="text-4xl text-black dark:text-white">Welcome to Baseball Training</h1>

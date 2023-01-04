@@ -12,6 +12,7 @@ export default {
       container: {
         center: true,
         screens: {
+          md: "1124px",
           lg: "1124px",
           xl: "1124px",
           "2xl": "1124px",

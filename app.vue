@@ -1,5 +1,7 @@
 <template >
-  <div v-if="user" :class="{ dark: darkMode }">
+  <div v-if="user" :class="{
+  dark: darkMode
+}" class=" h-full">
     <NavBar :darkMode="darkMode" @toggleDarkMode="toggleDarkMode" />
     <NuxtPage class="" />
   </div>
@@ -19,6 +21,7 @@ const user = useSupabaseUser();
 
 const toggleDarkMode = () => {
   darkMode.value = !darkMode.value
+  document.querySelector('body').classList.toggle('dark')
 }
 
 </script>
@@ -27,7 +30,9 @@ const toggleDarkMode = () => {
 
 <style>
 #app,
-body {
-  min-height: 100vh;
+body,
+#__nuxt {
+  height: 100vh;
+
 }
 </style>
